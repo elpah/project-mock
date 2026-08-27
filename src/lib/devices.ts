@@ -217,7 +217,7 @@ function drawCoverTop(
     sw = srcH * targetAspect;
     sx = (srcW - sw) / 2;
   }
-  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingEnabled = sw < dw || sh < dh ? false : true;
   ctx.imageSmoothingQuality = "high";
   ctx.drawImage(img, sx, 0, sw, sh, 0, 0, dw, dh);
 }
@@ -242,6 +242,20 @@ function clippedScreen(
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
   return canvas;
+}
+
+function paintScreen(
+  ctx: CanvasRenderingContext2D,
+  shot: HTMLCanvasElement,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+) {
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(shot, x, y, w, h);
+  ctx.restore();
 }
 
 function shadow(
@@ -311,7 +325,7 @@ function drawBrowser(
   }
 
   const shot = clippedScreen(image, screen.w, screen.h, screen.r, pixelRatio);
-  ctx.drawImage(shot, screen.x, screen.y, screen.w, screen.h);
+  paintScreen(ctx, shot, screen.x, screen.y, screen.w, screen.h);
 }
 
 function lerp(a: number, b: number, t: number) {
@@ -510,7 +524,7 @@ function drawLaptop(
   ctx.fill();
 
   const shot = clippedScreen(image, screenW, screenH, Math.max(3, width * 0.006), pixelRatio);
-  ctx.drawImage(shot, offsetX + bezel, top, screenW, screenH);
+  paintScreen(ctx, shot, offsetX + bezel, top, screenW, screenH);
 
   ctx.beginPath();
   ctx.arc(offsetX + width / 2, Math.max(7, top * 0.55), Math.max(2.2, width * 0.0045), 0, Math.PI * 2);
@@ -544,7 +558,7 @@ function drawImac(
   ctx.fillStyle = "#111";
   ctx.fill();
   const shot = clippedScreen(image, screen.w, screen.h, screen.r, pixelRatio);
-  ctx.drawImage(shot, screen.x, screen.y, screen.w, screen.h);
+  paintScreen(ctx, shot, screen.x, screen.y, screen.w, screen.h);
   ctx.fillStyle = "#D4D4D8";
   ctx.fillRect(width / 2 - 18, bodyH - 2, 36, 42);
   ctx.beginPath();
@@ -568,7 +582,7 @@ function drawMonitor(
   ctx.fillStyle = "#1C1C1C";
   ctx.fill();
   const shot = clippedScreen(image, screen.w, screen.h, screen.r, pixelRatio);
-  ctx.drawImage(shot, screen.x, screen.y, screen.w, screen.h);
+  paintScreen(ctx, shot, screen.x, screen.y, screen.w, screen.h);
   ctx.fillStyle = "#C8C8CC";
   ctx.fillRect(width / 2 - 12, bodyH, 24, 40);
   ctx.beginPath();
@@ -604,7 +618,7 @@ function drawPhone(
   ctx.fillStyle = "#0B0B0D";
   ctx.fill();
   const shot = clippedScreen(image, screen.w, screen.h, screen.r, pixelRatio);
-  ctx.drawImage(shot, screen.x, screen.y, screen.w, screen.h);
+  paintScreen(ctx, shot, screen.x, screen.y, screen.w, screen.h);
   if (type === "iphone") {
     const islandW = width * 0.28;
     const islandH = width * 0.072;
@@ -649,7 +663,7 @@ function drawTablet(
   ctx.fillStyle = "#111";
   ctx.fill();
   const shot = clippedScreen(image, screen.w, screen.h, screen.r, pixelRatio);
-  ctx.drawImage(shot, screen.x, screen.y, screen.w, screen.h);
+  paintScreen(ctx, shot, screen.x, screen.y, screen.w, screen.h);
   ctx.beginPath();
   ctx.arc(
     type === "tablet-landscape" ? width * 0.04 : width / 2,
@@ -672,7 +686,7 @@ function drawScreen(
   const { h } = measureDevice("screen", width);
   shadow(ctx, 0, 0, width, h, 22, intensity);
   const shot = clippedScreen(image, width, h, 22, pixelRatio);
-  ctx.drawImage(shot, 0, 0, width, h);
+  paintScreen(ctx, shot, 0, 0, width, h);
 }
 
 export function drawDeskAccessories(

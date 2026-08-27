@@ -8,4 +8,4 @@ npm install
 npm run dev
 ```
 
-Requires Node 22 (see `.nvmrc`). Open [http://localhost:3000](http://localhost:3000), choose a mockup, upload the screenshots that layout needs, then download a 3200×2000 WebP.
+Requires Node 22 (see `.nvmrc`). Open [http://localhost:3000](http://localhost:3000), choose a mockup, upload the screenshots that layout needs, then download a 3200×2000 PNG, JPEG, or WebP.

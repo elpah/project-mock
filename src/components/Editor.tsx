@@ -5,13 +5,19 @@ import { ControlPanel } from "@/components/ControlPanel";
 import { MockupBrowser } from "@/components/MockupBrowser";
 import { MockupCanvas } from "@/components/MockupCanvas";
 import { MOCKUP_MAP } from "@/lib/catalog";
-import { exportMockup } from "@/lib/compositor";
+import { exportMockup, type ExportFormat } from "@/lib/compositor";
 import { measureDevice } from "@/lib/devices";
 import type {
   DeviceSettings,
   MockupSettings,
   UploadedImage,
 } from "@/lib/types";
+
+const EXPORT_FORMATS = [
+  { id: "png", label: "PNG" },
+  { id: "jpeg", label: "JPEG" },
+  { id: "webp", label: "WebP" },
+] as const;
 
 type EditorProps = {
   styleId: string;
@@ -33,6 +39,7 @@ export function Editor({
   onBack,
 }: EditorProps) {
   const [selected, setSelected] = useState(0);
+  const [exportFormat, setExportFormat] = useState<ExportFormat>("png");
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState("");
   const [switching, setSwitching] = useState(false);
@@ -72,6 +79,7 @@ export function Editor({
         settings,
         presetId: styleId,
         shots: images,
+        format: exportFormat,
       });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -116,14 +124,34 @@ export function Editor({
           </h1>
           <p className="text-sm text-neutral-500">{preset.description}</p>
         </div>
-        <button
-          type="button"
-          onClick={downloadImage}
-          disabled={exporting}
-          className="rounded-full bg-neutral-950 px-6 py-3 text-sm font-semibold text-white hover:bg-neutral-800 disabled:opacity-60"
-        >
-          {exporting ? "Preparing…" : "Download"}
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex rounded-full border border-neutral-200 bg-white p-1">
+            {EXPORT_FORMATS.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => setExportFormat(option.id)}
+                className={`rounded-full px-3 py-2 text-sm font-medium ${
+                  exportFormat === option.id
+                    ? "bg-neutral-950 text-white"
+                    : "text-neutral-600 hover:text-neutral-950"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={downloadImage}
+            disabled={exporting}
+            className="rounded-full bg-neutral-950 px-6 py-3 text-sm font-semibold text-white hover:bg-neutral-800 disabled:opacity-60"
+          >
+            {exporting
+              ? "Preparing…"
+              : `Download ${EXPORT_FORMATS.find((option) => option.id === exportFormat)?.label}`}
+          </button>
+        </div>
       </div>
 
       {exportError ? (

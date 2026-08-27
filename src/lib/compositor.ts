@@ -114,6 +114,8 @@ export function renderMockup(
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, CANVAS_WIDTH * ratio, CANVAS_HEIGHT * ratio);
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
   drawEnvironment(ctx, preset, options.settings.background);
 
   const layouts = getLayerLayouts(preset, options.settings);
@@ -188,6 +190,17 @@ export function pickLayer(
   return null;
 }
 
+export type ExportFormat = "png" | "jpeg" | "webp";
+
+const EXPORT_FORMATS: Record<
+  ExportFormat,
+  { type: string; quality: number; extension: "png" | "jpg" | "webp" }
+> = {
+  png: { type: "image/png", quality: 1, extension: "png" },
+  jpeg: { type: "image/jpeg", quality: 0.95, extension: "jpg" },
+  webp: { type: "image/webp", quality: 0.8, extension: "webp" },
+};
+
 function encodeCanvas(
   canvas: HTMLCanvasElement,
   type: string,
@@ -202,7 +215,10 @@ export async function exportMockup(options: {
   presetId: string;
   settings: MockupSettings;
   shots: ShotList;
+  format?: ExportFormat;
 }) {
+  const format = options.format ?? "png";
+  const spec = EXPORT_FORMATS[format];
   const ratio = EXPORT_PIXEL_RATIO;
   const canvas = document.createElement("canvas");
   canvas.width = CANVAS_WIDTH * ratio;
@@ -211,13 +227,11 @@ export async function exportMockup(options: {
   if (!ctx) throw new Error("Could not create export canvas.");
   renderMockup(ctx, { ...options, selected: null, pixelRatio: ratio });
 
-  const webp = await encodeCanvas(canvas, "image/webp", 0.86);
-  if (webp && webp.type === "image/webp" && webp.size > 0) {
-    return { blob: webp, extension: "webp" as const };
+  const blob = await encodeCanvas(canvas, spec.type, spec.quality);
+  if (blob && blob.size > 0 && (!blob.type || blob.type === spec.type)) {
+    return { blob, extension: spec.extension };
   }
-  const jpeg = await encodeCanvas(canvas, "image/jpeg", 0.9);
-  if (jpeg && jpeg.size > 0) {
-    return { blob: jpeg, extension: "jpg" as const };
-  }
-  throw new Error("Image export failed.");
+  throw new Error(
+    `Could not export as ${format.toUpperCase()}. Try PNG or JPEG.`,
+  );
 }
